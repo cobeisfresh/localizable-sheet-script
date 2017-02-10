@@ -29,6 +29,8 @@ function onOpen() {
       .addToUi();
 }
 
+var numberOfLanguages = 1;
+
 function exportForIos() {
   var e = {
     parameter: {
@@ -51,8 +53,12 @@ function exportSheet(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getActiveSheet();
   var rowsData = getRowsData_(sheet, getExportOptions(e));
-  var json = makeStrings(rowsData, getExportOptions(e));
-  return displayText_(json);
+
+  var strings = [];
+  for (var i = 0; i < numberOfLanguages; i++) {
+    strings.push(makeString(rowsData, i, getExportOptions(e)));
+  }
+  return displayTexts_(strings);
 }
 
 function getExportOptions(e) {
@@ -64,8 +70,8 @@ function getExportOptions(e) {
   
   var cache = CacheService.getPublicCache();
   cache.put('language', options.language);
-  cache.put('format',   options.format);
-  cache.put('structure',   options.structure);
+  cache.put('format', options.format);
+  cache.put('structure', options.structure);
   
   Logger.log(options);
   return options;
@@ -102,27 +108,24 @@ function makeButton(app, parent, name, callback) {
 }
 
 function makeTextBox(app, name) { 
-  var textArea = app.createTextArea().setWidth('100%').setHeight('200px').setId(name).setName(name);
+  var textArea = app.createTextArea().setWidth('100%').setHeight('100px').setId(name).setName(name);
   return textArea;
 }
 
-function makeStrings(object, options) {
-  
+function makeString(object, textIndex, options) {
   switch (options.language) {
     case LANGUAGE_ANDROID:
-      return makeAndroidStrings(object, options);
+      return makeAndroidString(object, textIndex, options);
       break;
     case LANGUAGE_IOS:
-      return makeIosStrings(object, options);
+      return makeIosString(object, textIndex, options);
       break;
     default:
       break;
   }
-  
-  return "";
 }
 
-function makeAndroidStrings(object, options) {
+function makeAndroidString(object, textIndex, options) {
 
   var exportString = "";
   var prevIdentifier = "";
@@ -134,6 +137,12 @@ function makeAndroidStrings(object, options) {
     
     var o = object[i];
     var identifier = o.identifierAndroid;
+    
+    var text = o.texts[textIndex];
+    
+    if (text == undefined || text == "") {
+      continue;
+    }
     
     if(identifier == "") {
       continue;
@@ -154,7 +163,7 @@ function makeAndroidStrings(object, options) {
       prevIdentifier = identifier;
       
     } else {
-      exportString += "\t"+'<string name="'+identifier+'">'+o.text+'</string>' + "\n";
+      exportString += "\t"+'<string name="'+identifier+'">'+text+'</string>' + "\n";
     }
   }
   
@@ -163,10 +172,9 @@ function makeAndroidStrings(object, options) {
   return exportString;
 }
 
-function makeIosStrings(object, options) {
+function makeIosString(object, textIndex, options) {
 
   var exportString = "";
-  var prevIdentifier = "";
   
   exportString += "// MARK: - Localizable enum\n\n"
   
@@ -175,13 +183,19 @@ function makeIosStrings(object, options) {
   for(var i=0; i<object.length; i++) {
         
     var o = object[i];
+    var text = o.texts[textIndex];
+    
+    if (text == undefined || text == "") {
+      continue;
+    }
+    
     var identifier = o.identifierIos;
       
     if (identifier == "") {
       continue;
     }
         
-    exportString += "    /// " + o.text + "\n";
+    exportString += "    /// " + text + "\n";
     exportString += "    static let " + identifier + " = \"" + identifier + "\"\n\n";
   }
     
@@ -190,48 +204,80 @@ function makeIosStrings(object, options) {
   for(var i=0; i<object.length; i++) {
     var o = object[i];
     var identifier = o.identifierIos;
+    var text = o.texts[textIndex];
+    
+    if (text == undefined || text == "") {
+      continue;
+    }
     
     if(identifier == "") {
       continue;
     }
     
-    exportString += '"' + identifier + '" = "' + o.text + "\";\n";
+    exportString += '"' + identifier + '" = "' + text + "\";\n";
   }
   
   return exportString;
 }
 
-function displayText_(text) {
+function displayTexts_(texts) {
+  
   var app = UiApp.createApplication().setTitle('Export');
-  app.add(makeTextBox(app, 'json'));
-  app.getElementById('json').setText(text);
+
+  for (var i = 0; i < texts.length; i++) {
+    app.add(makeTextBox(app, 'json' + i));
+    app.getElementById('json' + i).setText(texts[i]); 
+  }
+  
   var ss = SpreadsheetApp.getActiveSpreadsheet(); 
   ss.show(app);
+
   return app; 
+}
+
+function getNormalizedHeaders(sheet, options) {
+  var headersRange = sheet.getRange(1, FIRST_COLUMN_POSITION, sheet.getFrozenRows(), sheet.getMaxColumns());
+  var headers = headersRange.getValues()[0];
+  return normalizeHeaders_(headers);
 }
 
 function getRowsData_(sheet, options) {
   
-  var headersRange = sheet.getRange(1, FIRST_COLUMN_POSITION, sheet.getFrozenRows(), sheet.getMaxColumns());
-  var headers = headersRange.getValues()[0];
   var dataRange = sheet.getRange(sheet.getFrozenRows()+1, FIRST_COLUMN_POSITION, sheet.getMaxRows(), sheet.getMaxColumns());
-  var objects = getObjects_(dataRange.getValues(), normalizeHeaders_(headers));
+  var headers = getNormalizedHeaders(sheet, options);
+  numberOfLanguages = headers.length - 2;
+  var objects = getObjects_(dataRange.getValues(), headers);
   
   return objects;
 }
 
 function getObjects_(data, keys) {
+  
   var objects = [];
+  
   for (var i = 0; i < data.length; ++i) {
-    var object = {};
+    
+    var object = {
+      "texts": []
+    };
+    
     var hasData = false;
+    
     for (var j = 0; j < data[i].length; ++j) {
+      
       var cellData = data[i][j];
       if (isCellEmpty_(cellData)) {
         //continue;
         cellData = "";
       }
-      object[keys[j]] = cellData;
+      
+      if (keys[j] != "identifierIos" && keys[j] != "identifierAndroid") {
+        if (cellData != "") {
+          object["texts"].push(cellData);
+        }
+      } else {
+        object[keys[j]] = cellData;
+      }
       hasData = true;
     }
     if (hasData) {
