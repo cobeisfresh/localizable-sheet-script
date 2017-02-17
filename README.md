@@ -16,6 +16,23 @@ For Android it creates an XML resources file with all of the strings. For iOS it
 1. Open your sheet.
 2. Go to **Custom Export** and select your **iOS** or **Android**.
 
+## Sheet format
+
+The script expects the sheet to be formatted in a specific way.
+
+| ... arbitrary number of columns before iOS keys | **Identifier iOS** | **Identifier Android** | English text | German text | ... |
+|-------------------------------------------------|--------------------|------------------------|--------------|-------------|-----|
+| place whatever you want in here                 | login_button_title | login_button_title     | Login        | Einloggen   |     |
+|                                                 | ...                | ...                    | ...          | ...         |     |
+
+**The texts in bold cannot be changed!** The script depends on them to know which identifier is which. The other texts don't matter.
+
+The **first row** must **always** contain headers, and not the actual strings.
+
+The number of languages depends on the `NUMBER_OF_LANGUAGES` variable in the script, and new languages can be added by adding a new column on the right and incrementing that number in the script.
+
+The position of the first (iOS) column that is relevant to the script is changed with the `FIRST_COLUMN_POSITION` variable in the script. By default it's `1` (the first column).
+
 ## Configuring
 
  - `NUMBER_OF_LANGUAGES`: The number of language columns to use.
