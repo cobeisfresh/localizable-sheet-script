@@ -18,4 +18,4 @@ For Android it creates an XML resources file with all of the strings. For iOS it
 
 ## Todo:
 
-- [ ] Support multiple languages.
+- [ ] Add more documentation in code.
