@@ -1,35 +1,41 @@
-var FORMAT_ONELINE   = 'One-line';
-var FORMAT_MULTILINE = 'Multi-line';
-var FORMAT_PRETTY    = 'Pretty';
+// Configurable properties
 
-var LANGUAGE_IOS      = 'iOS';
-var LANGUAGE_ANDROID  = 'Android';
+/*
+   The number of languages you support. Please check the README.md for more
+   information on column positions.
+*/
+var NUMBER_OF_LANGUAGES = 1;
 
 /* 
    The script expects two columns for iOS and Android identifiers, respectively,
    and a column after that with all of the string values. This is the position of
    the iOS column.
 */
-var FIRST_COLUMN_POSITION = 2
+var FIRST_COLUMN_POSITION = 1;
 
-var STRUCTURE_LIST = 'List';
-var STRUCTURE_HASH = 'Hash (keyed by "id" column)';
+/*
+   True if iOS output should contain a `Localizable` `enum` that contains all of
+   the keys as string constants.
+*/
+var IOS_INCLUDES_LOCALIZABLE_ENUM = true;
 
-/* Defaults for this particular spreadsheet, change as desired */
-var DEFAULT_FORMAT = FORMAT_PRETTY;
+
+// Constants
+
+var LANGUAGE_IOS      = 'iOS';
+var LANGUAGE_ANDROID  = 'Android';
 var DEFAULT_LANGUAGE = LANGUAGE_IOS;
-var DEFAULT_STRUCTURE = STRUCTURE_LIST;
+
+
+// Export
 
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
-  // Or DocumentApp or FormApp.
   ui.createMenu('Custom Export')
       .addItem('iOS', 'exportForIos')
       .addItem('Android', 'exportForAndroid')
       .addToUi();
 }
-
-var numberOfLanguages = 1;
 
 function exportForIos() {
   var e = {
@@ -49,33 +55,32 @@ function exportForAndroid() {
   exportSheet(e);
 }
 
+/*
+   Fetches the active sheet, gets all of the data and displays the
+   result strings.
+*/
 function exportSheet(e) {
+  
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getActiveSheet();
   var rowsData = getRowsData_(sheet, getExportOptions(e));
 
   var strings = [];
-  for (var i = 0; i < numberOfLanguages; i++) {
+  for (var i = 0; i < NUMBER_OF_LANGUAGES; i++) {
     strings.push(makeString(rowsData, i, getExportOptions(e)));
   }
   return displayTexts_(strings);
 }
 
 function getExportOptions(e) {
+
   var options = {};
-  
-  options.language = e && e.parameter.language || DEFAULT_LANGUAGE;
-  options.format   = e && e.parameter.format || DEFAULT_FORMAT;
-  options.structure = e && e.parameter.structure || DEFAULT_STRUCTURE;
-  
-  var cache = CacheService.getPublicCache();
-  cache.put('language', options.language);
-  cache.put('format', options.format);
-  cache.put('structure', options.structure);
-  
-  Logger.log(options);
+  options.language = e && e.parameter.language || DEFAULT_LANGUAGE;  
   return options;
 }
+
+
+// UI Elements
 
 function makeLabel(app, text, id) {
   var lb = app.createLabel(text);
@@ -112,6 +117,24 @@ function makeTextBox(app, name) {
   return textArea;
 }
 
+function displayTexts_(texts) {
+  
+  var app = UiApp.createApplication().setTitle('Export');
+
+  for (var i = 0; i < texts.length; i++) {
+    app.add(makeTextBox(app, 'json' + i));
+    app.getElementById('json' + i).setText(texts[i]); 
+  }
+  
+  var ss = SpreadsheetApp.getActiveSpreadsheet(); 
+  ss.show(app);
+
+  return app; 
+}
+
+
+// Creating iOS and Android strings
+
 function makeString(object, textIndex, options) {
   switch (options.language) {
     case LANGUAGE_ANDROID:
@@ -125,6 +148,9 @@ function makeString(object, textIndex, options) {
   }
 }
 
+/*
+   Creates the strings.xml file for Android.
+*/
 function makeAndroidString(object, textIndex, options) {
 
   var exportString = "";
@@ -172,34 +198,40 @@ function makeAndroidString(object, textIndex, options) {
   return exportString;
 }
 
+/*
+   Creates the Localizable.strings file and a Localizable enum for iOS.
+*/
 function makeIosString(object, textIndex, options) {
 
   var exportString = "";
   
-  exportString += "// MARK: - Localizable enum\n\n"
+  if (IOS_INCLUDES_LOCALIZABLE_ENUM) {
   
-  exportString += "enum Localizable {\n\n"
+    exportString += "// MARK: - Localizable enum\n\n"
+  
+    exportString += "enum Localizable {\n\n"
           
-  for(var i=0; i<object.length; i++) {
+    for(var i=0; i<object.length; i++) {
         
-    var o = object[i];
-    var text = o.texts[textIndex];
+      var o = object[i];
+      var text = o.texts[textIndex];
     
-    if (text == undefined || text == "") {
-      continue;
-    }
+      if (text == undefined || text == "") {
+        continue;
+      }
     
-    var identifier = o.identifierIos;
+      var identifier = o.identifierIos;
       
-    if (identifier == "") {
-      continue;
-    }
+      if (identifier == "") {
+        continue;
+      }
         
-    exportString += "    /// " + text + "\n";
-    exportString += "    static let " + identifier + " = \"" + identifier + "\"\n\n";
-  }
+      exportString += "    /// " + text + "\n";
+      exportString += "    static let " + identifier + " = \"" + identifier + "\"\n\n";
+    }
     
-  exportString += "// MARK: - Strings\n\n";
+    exportString += "// MARK: - Strings\n\n";
+  }
   
   for(var i=0; i<object.length; i++) {
     var o = object[i];
@@ -220,78 +252,27 @@ function makeIosString(object, textIndex, options) {
   return exportString;
 }
 
-function displayTexts_(texts) {
-  
-  var app = UiApp.createApplication().setTitle('Export');
 
-  for (var i = 0; i < texts.length; i++) {
-    app.add(makeTextBox(app, 'json' + i));
-    app.getElementById('json' + i).setText(texts[i]); 
-  }
-  
-  var ss = SpreadsheetApp.getActiveSpreadsheet(); 
-  ss.show(app);
+// Data fetching
 
-  return app; 
-}
-
+/*
+   Gets the titles for the first row from the speadsheet, in lower case and without spaces.
+   - returns: a string array of the headers
+*/
 function getNormalizedHeaders(sheet, options) {
   var headersRange = sheet.getRange(1, FIRST_COLUMN_POSITION, sheet.getFrozenRows(), sheet.getMaxColumns());
   var headers = headersRange.getValues()[0];
-  return normalizeHeaders_(headers);
+  return normalizeHeaders(headers);
 }
 
-function getRowsData_(sheet, options) {
-  
-  var dataRange = sheet.getRange(sheet.getFrozenRows()+1, FIRST_COLUMN_POSITION, sheet.getMaxRows(), sheet.getMaxColumns());
-  var headers = getNormalizedHeaders(sheet, options);
-  numberOfLanguages = headers.length - 2;
-  var objects = getObjects_(dataRange.getValues(), headers);
-  
-  return objects;
-}
-
-function getObjects_(data, keys) {
-  
-  var objects = [];
-  
-  for (var i = 0; i < data.length; ++i) {
-    
-    var object = {
-      "texts": []
-    };
-    
-    var hasData = false;
-    
-    for (var j = 0; j < data[i].length; ++j) {
-      
-      var cellData = data[i][j];
-      if (isCellEmpty_(cellData)) {
-        //continue;
-        cellData = "";
-      }
-      
-      if (keys[j] != "identifierIos" && keys[j] != "identifierAndroid") {
-        if (cellData != "") {
-          object["texts"].push(cellData);
-        }
-      } else {
-        object[keys[j]] = cellData;
-      }
-      hasData = true;
-    }
-    if (hasData) {
-      objects.push(object);
-    }
-  }
-  return objects;
-}
-
-
-function normalizeHeaders_(headers) {
+/*
+   Removes all empty cells from the headers string array, and normalizes the rest into camelCase.
+   - returns: a string array containing a list of normalized headers
+*/
+function normalizeHeaders(headers) {
   var keys = [];
   for (var i = 0; i < headers.length; ++i) {
-    var key = normalizeHeader_(headers[i]);
+    var key = normalizeHeader(headers[i]);
     if (key.length > 0) {
       keys.push(key);
     }
@@ -299,7 +280,11 @@ function normalizeHeaders_(headers) {
   return keys;
 }
 
-function normalizeHeader_(header) {
+/*
+   Converts a header string into a camelCase string.
+    - returns a string in camelCase
+*/
+function normalizeHeader(header) {
   var key = "";
   var upperCase = false;
   for (var i = 0; i < header.length; ++i) {
@@ -324,6 +309,61 @@ function normalizeHeader_(header) {
   return key;
 }
 
+/*
+   Gets all of the data from the sheet.
+    - returns an array of objects containing all the necessary data for display.
+*/
+function getRowsData_(sheet, options) {
+  
+  var dataRange = sheet.getRange(sheet.getFrozenRows()+1, FIRST_COLUMN_POSITION, sheet.getMaxRows(), sheet.getMaxColumns());
+  var headers = getNormalizedHeaders(sheet, options);
+  var objects = getObjects(dataRange.getValues(), headers);
+  
+  return objects;
+}
+
+/*
+   Gets the objects for the cell data. For each cell, the keys are the headers and the value is the
+   data inside the cell.
+   - returns: an array of objects with data for displaying the final string
+*/
+function getObjects(data, keys) {
+  
+  var objects = [];
+  
+  for (var i = 0; i < data.length; ++i) {
+    
+    var object = {
+      "texts": []
+    };
+    
+    var hasData = false;
+    
+    for (var j = 0; j < data[i].length; ++j) {
+      
+      var cellData = data[i][j];
+      if (isCellEmpty_(cellData)) {
+        cellData = "";
+      }
+      
+      if (keys[j] != "identifierIos" && keys[j] != "identifierAndroid") {
+        if (cellData != "") {
+          object["texts"].push(cellData);
+        }
+      } else {
+        object[keys[j]] = cellData;
+      }
+      hasData = true;
+    }
+    if (hasData) {
+      objects.push(object);
+    }
+  }
+  return objects;
+}
+
+
+// Utils
 
 // Returns true if the cell where cellData was read from is empty.
 // Arguments:
