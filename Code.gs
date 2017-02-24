@@ -1,19 +1,12 @@
 /*
-
 localizable-sheet-script
 A Google Sheets script that will take a sheet in a specific format and return iOS and Android localization files.
 https://github.com/cobeisfresh/localizable-sheet-script
-
 Created by COBE http://cobeisfresh.com/ Copyright 2017 COBE
-
 License: MIT
-
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 */
 
 // Configurable properties
@@ -30,6 +23,11 @@ var NUMBER_OF_LANGUAGES = 1;
    the iOS column.
 */
 var FIRST_COLUMN_POSITION = 1;
+
+/*
+   The position of the header containing the strings "Identifier iOS" and "Identifier Android"
+*/
+var HEADER_ROW_POSITION = 1;
 
 /*
    True if iOS output should contain a `Localizable` `enum` that contains all of
@@ -248,6 +246,7 @@ function makeIosString(object, textIndex, options) {
       exportString += "    static let " + identifier + " = \"" + identifier + "\"\n\n";
     }
     
+    exportString += "}\n\n"
     exportString += "// MARK: - Strings\n\n";
   }
   
@@ -278,7 +277,7 @@ function makeIosString(object, textIndex, options) {
    - returns: a string array of the headers
 */
 function getNormalizedHeaders(sheet, options) {
-  var headersRange = sheet.getRange(1, FIRST_COLUMN_POSITION, sheet.getFrozenRows(), sheet.getMaxColumns());
+  var headersRange = sheet.getRange(1, FIRST_COLUMN_POSITION, HEADER_ROW_POSITION, sheet.getMaxColumns());
   var headers = headersRange.getValues()[0];
   return normalizeHeaders(headers);
 }
@@ -333,7 +332,7 @@ function normalizeHeader(header) {
 */
 function getRowsData_(sheet, options) {
   
-  var dataRange = sheet.getRange(sheet.getFrozenRows()+1, FIRST_COLUMN_POSITION, sheet.getMaxRows(), sheet.getMaxColumns());
+  var dataRange = sheet.getRange(HEADER_ROW_POSITION + 1, FIRST_COLUMN_POSITION, sheet.getMaxRows(), sheet.getMaxColumns());
   var headers = getNormalizedHeaders(sheet, options);
   var objects = getObjects(dataRange.getValues(), headers);
   
