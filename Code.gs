@@ -364,9 +364,7 @@ function getObjects(data, keys) {
       }
       
       if (keys[j] != "identifierIos" && keys[j] != "identifierAndroid") {
-        if (cellData != "") {
-          object["texts"].push(cellData);
-        }
+        object["texts"].push(cellData);
       } else {
         object[keys[j]] = cellData;
       }
