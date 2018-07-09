@@ -3,7 +3,7 @@ A Google Sheets script that will take a sheet in a specific format and return iO
 
 ## What it does
 
-For Android it creates an XML resources file with all of the strings. For iOS it creates a Localizable enum with String constants, and a .strings file. For Web it creates .json file all the strings.
+For Android it creates an XML resources file with all of the strings. For iOS it creates a Localizable enum with String constants, and a .strings file. For Web it creates .json file with all of the strings.
 
 ## Installing
 
@@ -20,10 +20,10 @@ For Android it creates an XML resources file with all of the strings. For iOS it
 
 The script expects the sheet to be formatted in a specific way.
 
-| ... arbitrary number of columns before iOS keys | **Identifier iOS** | **Identifier Android** | English text | German text | ... |
-|-------------------------------------------------|--------------------|------------------------|--------------|-------------|-----|
-| place whatever you want in here                 | login_button_title | login_button_title     | Login        | Einloggen   |     |
-|                                                 | ...                | ...                    | ...          | ...         |     |
+| ... arbitrary number of columns before iOS keys | **Identifier iOS** | **Identifier Android** | **Identifier Android** | English text | German text | ... |
+|-------------------------------------------------|--------------------|------------------------|------------------------|--------------|-------------|-----|
+| place whatever you want in here                 | login_button_title | login_button_title     | login_button_title     | Login        | Einloggen   |     |
+|                                                 | ...                | ...                    | ...                    | ...          | ...         |     |
 
 **The texts in bold cannot be changed!** The script depends on them to know which identifier is which. The other texts don't matter.
 
