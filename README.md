@@ -20,7 +20,7 @@ For Android it creates an XML resources file with all of the strings. For iOS it
 
 The script expects the sheet to be formatted in a specific way.
 
-| ... arbitrary number of columns before iOS keys | **Identifier iOS** | **Identifier Android** | **Identifier Android** | English text | German text | ... |
+| ... arbitrary number of columns before iOS keys | **Identifier iOS** | **Identifier Android** | **Identifier Web** | English text | German text | ... |
 |-------------------------------------------------|--------------------|------------------------|------------------------|--------------|-------------|-----|
 | place whatever you want in here                 | login_button_title | login_button_title     | login_button_title     | Login        | Einloggen   |     |
 |                                                 | ...                | ...                    | ...                    | ...          | ...         |     |
