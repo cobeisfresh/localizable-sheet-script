@@ -128,22 +128,20 @@ function makeButton(app, parent, name, callback) {
   return button;
 }
 
-function makeTextBox(app, name) { 
-  var textArea = app.createTextArea().setWidth('100%').setHeight('100px').setId(name).setName(name);
+function makeTextBox(id, content) {
+  var textArea = '<textarea rows="10" cols="80" id="' + id + '">' + content + '</textarea>';
   return textArea;
 }
 
 function displayTexts_(texts) {
   
-  var app = UiApp.createApplication().setTitle('Export');
+  var app = HtmlService.createHtmlOutput().setWidth(800).setHeight(600);
 
   for (var i = 0; i < texts.length; i++) {
-    app.add(makeTextBox(app, 'json' + i));
-    app.getElementById('json' + i).setText(texts[i]); 
+     app.append(makeTextBox("export_" + i, texts[i]))
   }
   
-  var ss = SpreadsheetApp.getActiveSpreadsheet(); 
-  ss.show(app);
+  SpreadsheetApp.getUi().showModalDialog(app, "Translations");
 
   return app; 
 }
