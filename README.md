@@ -1,9 +1,9 @@
 # localizable-sheet-script
-A Google Sheets script that will take a sheet in a specific format and return iOS and Android localization files.
+A Google Sheets script that will take a sheet in a specific format and return iOS, Android and Web (Json) localization files.
 
 ## What it does
 
-For Android it creates an XML resources file with all of the strings. For iOS it creates a Localizable enum with String constants, and a .strings file. 
+For Android it creates an XML resources file with all of the strings. For iOS it creates a Localizable enum with String constants, and a .strings file. For Web it creates .json file with all of the strings.
 
 ## Installing
 
@@ -14,16 +14,16 @@ For Android it creates an XML resources file with all of the strings. For iOS it
 ## Usage
 
 1. Open your sheet.
-2. Go to **Custom Export** and select your **iOS** or **Android**.
+2. Go to **Custom Export** and select your **iOS**, **Android** or **Web (Json)**.
 
 ## Sheet format
 
 The script expects the sheet to be formatted in a specific way.
 
-| ... arbitrary number of columns before iOS keys | **Identifier iOS** | **Identifier Android** | English text | German text | ... |
-|-------------------------------------------------|--------------------|------------------------|--------------|-------------|-----|
-| place whatever you want in here                 | login_button_title | login_button_title     | Login        | Einloggen   |     |
-|                                                 | ...                | ...                    | ...          | ...         |     |
+| ... arbitrary number of columns before iOS keys | **Identifier iOS** | **Identifier Android** | **Identifier Web** | English text | German text | ... |
+|-------------------------------------------------|--------------------|------------------------|------------------------|--------------|-------------|-----|
+| place whatever you want in here                 | login_button_title | login_button_title     | login_button_title     | Login        | Einloggen   |     |
+|                                                 | ...                | ...                    | ...                    | ...          | ...         |     |
 
 **The texts in bold cannot be changed!** The script depends on them to know which identifier is which. The other texts don't matter.
 
@@ -41,7 +41,7 @@ The position of the first (iOS) column that is relevant to the script is changed
  
 ## Exported files
 
-The exported files are the standard format (`strings.xml` or `Localizable.strings`) for the specific platforms. iOS also includes a `Localizable` `enum` which contains all of the keys as `static let` properties for code-completion and less typos. 
+The exported files are the standard format (`strings.xml`, `Localizable.strings` or `strings.json`) for the specific platforms. iOS also includes a `Localizable` `enum` which contains all of the keys as `static let` properties for code-completion and less typos. 
 
 ## License: MIT
 
