@@ -128,17 +128,22 @@ function makeButton(app, parent, name, callback) {
   return button;
 }
 
-function makeTextBox(id, content) {
-  var textArea = '<textarea rows="10" cols="80" id="' + id + '">' + content + '</textarea>';
+function makeTextBox(id, title, content) {
+  var textArea = '<p>' + title + '<\p><textarea rows="10" style="width:100%" id="' + id + '">' + content + '</textarea>';
   return textArea;
 }
 
 function displayTexts_(texts) {
   
   var app = HtmlService.createHtmlOutput().setWidth(800).setHeight(600);
-
+  
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getActiveSheet();
+  var headersRange = sheet.getRange(1, FIRST_COLUMN_POSITION + 2, HEADER_ROW_POSITION , sheet.getMaxColumns());
+  var headers = headersRange.getValues()[0];
+  
   for (var i = 0; i < texts.length; i++) {
-     app.append(makeTextBox("export_" + i, texts[i]))
+     app.append(makeTextBox("export_" + i, headers[i], texts[i]))
   }
   
   SpreadsheetApp.getUi().showModalDialog(app, "Translations");
