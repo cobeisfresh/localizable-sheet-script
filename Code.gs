@@ -193,12 +193,14 @@ function makeAndroidString(object, textIndex, options) {
       prevIdentifier = "";
     }
 
-    text = text.replace(/\n/g, "\\n");
-    text = text.replace(/&/g, "&amp;");
-    text = text.replace(/\'/g, "\\'");
-    text = text.replace(/</g, "&lt;");
-    text = text.replace(/>/g, "&gt;");
-    text = text.replace(/"/g, "\\\"");
+    if(typeof text === 'string') {
+      text = text.replace(/\n/g, "\\n");
+      text = text.replace(/&/g, "&amp;");
+      text = text.replace(/\'/g, "\\'");
+      text = text.replace(/</g, "&lt;");
+      text = text.replace(/>/g, "&gt;");
+      text = text.replace(/"/g, "\\\"");
+    }
     
     if(identifier.indexOf("[]")>0) {
       
@@ -268,7 +270,9 @@ function makeIosString(object, textIndex, options) {
       continue;
     }
     
-    text = text.replace(/"/g, "\\\"");
+    if(typeof text === 'string') {
+      text = text.replace(/"/g, "\\\"");
+    }
 
     exportString += '"' + identifier + '" = "' + text + "\";\n";
   }
