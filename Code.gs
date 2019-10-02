@@ -275,7 +275,7 @@ function makeIosString(object, textIndex, options) {
    - returns: a string array of the headers
 */
 function getNormalizedHeaders(sheet, options) {
-  var headersRange = sheet.getRange(1, FIRST_COLUMN_POSITION, HEADER_ROW_POSITION, sheet.getMaxColumns());
+  var headersRange = sheet.getRange(HEADER_ROW_POSITION, FIRST_COLUMN_POSITION, 1, sheet.getMaxColumns());
   var headers = headersRange.getValues()[0];
   return normalizeHeaders(headers);
 }
